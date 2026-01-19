@@ -3,10 +3,21 @@ import type { NextRequest } from "next/server";
 import { ACCESS_TOKEN_COOKIE, REFRESH_TOKEN_COOKIE } from "@/lib/auth-cookies";
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/login"],
 };
 
 export async function middleware(request: NextRequest) {
+  if (request.nextUrl.pathname === "/login") {
+    const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
+    if (accessToken) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      url.search = "";
+      return NextResponse.redirect(url);
+    }
+    return NextResponse.next();
+  }
+
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   if (accessToken) {
     return NextResponse.next();
@@ -20,8 +31,7 @@ export async function middleware(request: NextRequest) {
   }
 
   const backendBaseUrl = process.env.BACKEND_BASE_URL;
-  const tenantApiKey = process.env.TENANT_API_KEY;
-  if (!backendBaseUrl || !tenantApiKey) {
+  if (!backendBaseUrl) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -33,7 +43,6 @@ export async function middleware(request: NextRequest) {
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-api-key": tenantApiKey,
     },
     body: JSON.stringify({ refreshToken }),
     cache: "no-store",
