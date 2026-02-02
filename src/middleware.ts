@@ -20,7 +20,16 @@ export async function middleware(request: NextRequest) {
 
   const accessToken = request.cookies.get(ACCESS_TOKEN_COOKIE)?.value;
   if (accessToken) {
-    return NextResponse.next();
+    const adminOk = await isAdmin(accessToken);
+    if (adminOk) {
+      return NextResponse.next();
+    }
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    const redirect = NextResponse.redirect(url);
+    redirect.cookies.set(ACCESS_TOKEN_COOKIE, "", { maxAge: 0, path: "/" });
+    redirect.cookies.set(REFRESH_TOKEN_COOKIE, "", { maxAge: 0, path: "/" });
+    return redirect;
   }
 
   const refreshToken = request.cookies.get(REFRESH_TOKEN_COOKIE)?.value;
@@ -68,6 +77,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  const adminOk = await isAdmin(json.accessToken);
+  if (!adminOk) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    const redirect = NextResponse.redirect(url);
+    redirect.cookies.set(ACCESS_TOKEN_COOKIE, "", { maxAge: 0, path: "/" });
+    redirect.cookies.set(REFRESH_TOKEN_COOKIE, "", { maxAge: 0, path: "/" });
+    return redirect;
+  }
+
   const response = NextResponse.next();
   response.cookies.set(ACCESS_TOKEN_COOKIE, json.accessToken, {
     httpOnly: true,
@@ -85,4 +104,21 @@ export async function middleware(request: NextRequest) {
   });
 
   return response;
+}
+
+async function isAdmin(accessToken: string): Promise<boolean> {
+  const backendBaseUrl = process.env.BACKEND_BASE_URL;
+  if (!backendBaseUrl) return false;
+
+  const meUrl = `${backendBaseUrl.replace(/\/$/, "")}/api/v1/users/me`;
+  const res = await fetch(meUrl, {
+    headers: {
+      authorization: `Bearer ${accessToken}`,
+    },
+    cache: "no-store",
+  }).catch(() => null);
+
+  if (!res || !res.ok) return false;
+  const json = (await res.json().catch(() => null)) as { role?: string } | null;
+  return json?.role === "ADMIN";
 }

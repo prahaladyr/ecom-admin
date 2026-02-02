@@ -5,7 +5,7 @@ This is the work plan for the **Admin Panel (Next.js)** that manages a tenant’
 ## Scope & assumptions
 
 - Admin app is separate from the storefront.
-- All requests to the backend require `x-api-key` (tenant selection).
+- All requests to the backend require authenticated admin role.
 - Admin features require authenticated user with `role=ADMIN`.
 - Backend base URL is configured via env (`BACKEND_BASE_URL`).
 
@@ -15,7 +15,6 @@ This is the work plan for the **Admin Panel (Next.js)** that manages a tenant’
 - [ ] Install and adopt `shadcn/ui` component system
 - [ ] Define responsive breakpoint policy (mobile-first)
 - [ ] Confirm runtime env strategy
-  - [ ] `TENANT_API_KEY` in `.env` (single-tenant admin) **OR** tenant selection UI (multi-tenant admin)
   - [ ] `BACKEND_BASE_URL` per environment
 - [ ] Add README instructions specific to admin app (run, env, ports)
 - [ ] Add `.env.local.example` notes (do not commit secrets)
@@ -51,7 +50,6 @@ This is the work plan for the **Admin Panel (Next.js)** that manages a tenant’
 ## Phase 3 — API client conventions
 
 - [ ] Central API client wrapper
-  - [ ] Always attach `x-api-key`
   - [ ] Attach `Authorization: Bearer <accessToken>` when available
   - [ ] Normalize backend errors into a consistent shape
   - [ ] Handle 401/403 (auto-redirect or “not authorized” screen)
