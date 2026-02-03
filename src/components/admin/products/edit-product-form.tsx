@@ -8,15 +8,21 @@ import { Label } from "@/components/ui/label";
 
 type CategoryOption = { id: string; name: string };
 
+const PRODUCT_TYPES = ["RETAIL", "HARDWARE", "RAW_MATERIAL", "FINISHED_GOOD"] as const;
+
 type Product = {
   id: string;
   name: string;
   slug: string;
   description?: string | null;
+  brand?: string | null;
+  hsn?: string | null;
+  images?: string[] | null;
+  type?: "RETAIL" | "HARDWARE" | "RAW_MATERIAL" | "FINISHED_GOOD";
   priceAmount: number;
   currencyCode: string;
   isActive: boolean;
-  categoryId?: string | null;
+  categories?: { category: { id: string; name: string } }[];
 };
 
 type Props = {
@@ -24,18 +30,36 @@ type Props = {
   categories: CategoryOption[];
 };
 
+type FormState = {
+  name: string;
+  slug: string;
+  description: string;
+  brand: string;
+  hsn: string;
+  images: string;
+  priceAmount: string;
+  currencyCode: string;
+  type: (typeof PRODUCT_TYPES)[number];
+  isActive: boolean;
+  categoryIds: string[];
+};
+
 export default function EditProductForm({ product, categories }: Props) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<FormState>({
     name: product.name,
     slug: product.slug,
     description: product.description ?? "",
+    brand: product.brand ?? "",
+    hsn: product.hsn ?? "",
+    images: product.images?.join(", ") ?? "",
     priceAmount: String(product.priceAmount),
     currencyCode: product.currencyCode,
+    type: product.type ?? "RETAIL",
     isActive: product.isActive,
-    categoryId: product.categoryId ?? "",
+    categoryIds: product.categories?.map((entry) => entry.category.id) ?? [],
   });
 
   async function onSubmit(event: React.FormEvent) {
@@ -47,10 +71,19 @@ export default function EditProductForm({ product, categories }: Props) {
       name: form.name,
       slug: form.slug || undefined,
       description: form.description || undefined,
+      brand: form.brand || undefined,
+      hsn: form.hsn || undefined,
+      images: form.images
+        ? form.images
+            .split(",")
+            .map((value) => value.trim())
+            .filter(Boolean)
+        : undefined,
       priceAmount: Number(form.priceAmount),
       currencyCode: form.currencyCode || undefined,
+      type: form.type,
       isActive: form.isActive,
-      categoryId: form.categoryId || undefined,
+      categoryIds: form.categoryIds.length > 0 ? form.categoryIds : undefined,
     };
 
     try {
@@ -117,6 +150,33 @@ export default function EditProductForm({ product, categories }: Props) {
       </div>
 
       <div className="grid gap-2">
+        <Label htmlFor="brand">Brand</Label>
+        <Input
+          id="brand"
+          value={form.brand}
+          onChange={(event) => setForm((prev) => ({ ...prev, brand: event.target.value }))}
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="hsn">HSN</Label>
+        <Input
+          id="hsn"
+          value={form.hsn}
+          onChange={(event) => setForm((prev) => ({ ...prev, hsn: event.target.value }))}
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="images">Images (comma-separated URLs)</Label>
+        <Input
+          id="images"
+          value={form.images}
+          onChange={(event) => setForm((prev) => ({ ...prev, images: event.target.value }))}
+        />
+      </div>
+
+      <div className="grid gap-2">
         <Label htmlFor="priceAmount">Price (minor units)</Label>
         <Input
           id="priceAmount"
@@ -138,20 +198,47 @@ export default function EditProductForm({ product, categories }: Props) {
       </div>
 
       <div className="grid gap-2">
-        <Label htmlFor="categoryId">Category</Label>
+        <Label htmlFor="type">Product type</Label>
         <select
-          id="categoryId"
+          id="type"
           className="rounded-md border bg-background px-3 py-2 text-sm"
-          value={form.categoryId}
-          onChange={(event) => setForm((prev) => ({ ...prev, categoryId: event.target.value }))}
+          value={form.type}
+          onChange={(event) =>
+            setForm((prev) => ({
+              ...prev,
+              type: event.target.value as (typeof PRODUCT_TYPES)[number],
+            }))
+          }
         >
-          <option value="">Unassigned</option>
+          {PRODUCT_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="categoryIds">Categories</Label>
+        <select
+          id="categoryIds"
+          multiple
+          className="min-h-32 rounded-md border bg-background px-3 py-2 text-sm"
+          value={form.categoryIds}
+          onChange={(event) =>
+            setForm((prev) => ({
+              ...prev,
+              categoryIds: Array.from(event.target.selectedOptions).map((option) => option.value),
+            }))
+          }
+        >
           {categories.map((category) => (
             <option key={category.id} value={category.id}>
               {category.name}
             </option>
           ))}
         </select>
+        <p className="text-xs text-muted-foreground">Hold ⌘/Ctrl to select multiple.</p>
       </div>
 
       <label className="flex items-center gap-2 text-sm">

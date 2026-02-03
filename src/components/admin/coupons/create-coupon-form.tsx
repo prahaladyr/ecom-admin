@@ -17,6 +17,8 @@ export default function CreateCouponForm() {
     type: "PERCENT",
     value: "",
     isActive: true,
+    maxRedemptions: "",
+    perUserLimit: "",
     startsAt: "",
     endsAt: "",
   });
@@ -31,6 +33,8 @@ export default function CreateCouponForm() {
       type: form.type,
       value: Number(form.value),
       isActive: form.isActive,
+      maxRedemptions: form.maxRedemptions ? Number(form.maxRedemptions) : undefined,
+      perUserLimit: form.perUserLimit ? Number(form.perUserLimit) : undefined,
       startsAt: form.startsAt || undefined,
       endsAt: form.endsAt || undefined,
     };
@@ -51,6 +55,8 @@ export default function CreateCouponForm() {
         type: "PERCENT",
         value: "",
         isActive: true,
+        maxRedemptions: "",
+        perUserLimit: "",
         startsAt: "",
         endsAt: "",
       });
@@ -108,6 +114,28 @@ export default function CreateCouponForm() {
         />
         Active
       </label>
+
+      <div className="grid gap-2">
+        <Label htmlFor="maxRedemptions">Max redemptions</Label>
+        <Input
+          id="maxRedemptions"
+          type="number"
+          min={0}
+          value={form.maxRedemptions}
+          onChange={(event) => setForm((prev) => ({ ...prev, maxRedemptions: event.target.value }))}
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="perUserLimit">Per-user limit</Label>
+        <Input
+          id="perUserLimit"
+          type="number"
+          min={0}
+          value={form.perUserLimit}
+          onChange={(event) => setForm((prev) => ({ ...prev, perUserLimit: event.target.value }))}
+        />
+      </div>
 
       <div className="grid gap-2">
         <Label htmlFor="startsAt">Starts at (ISO)</Label>

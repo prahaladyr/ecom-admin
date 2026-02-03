@@ -13,7 +13,9 @@ type Product = {
   priceAmount: number;
   currencyCode: string;
   isActive: boolean;
-  category?: { id: string; name: string } | null;
+  type?: "RETAIL" | "HARDWARE" | "RAW_MATERIAL" | "FINISHED_GOOD";
+  brand?: string | null;
+  categories?: { category: { id: string; name: string } }[];
 };
 
 export default async function ProductsPage() {
@@ -63,6 +65,7 @@ export default async function ProductsPage() {
                   <tr className="border-b text-left">
                     <th className="py-2">Name</th>
                     <th className="py-2">Price</th>
+                    <th className="py-2">Type</th>
                     <th className="py-2">Category</th>
                     <th className="py-2">Status</th>
                     <th className="py-2">Actions</th>
@@ -75,13 +78,16 @@ export default async function ProductsPage() {
                         <div className="font-medium">{product.name}</div>
                         <div className="text-xs text-muted-foreground sm:hidden">
                           {product.priceAmount} {product.currencyCode} ·{" "}
-                          {product.category?.name ?? "—"}
+                          {product.categories?.[0]?.category.name ?? "—"}
                         </div>
                       </td>
                       <td className="py-2 hidden sm:table-cell">
                         {product.priceAmount} {product.currencyCode}
                       </td>
-                      <td className="py-2 hidden sm:table-cell">{product.category?.name ?? "—"}</td>
+                      <td className="py-2 hidden sm:table-cell">{product.type ?? "RETAIL"}</td>
+                      <td className="py-2 hidden sm:table-cell">
+                        {product.categories?.[0]?.category.name ?? "—"}
+                      </td>
                       <td className="py-2 hidden sm:table-cell">
                         {product.isActive ? "Active" : "Inactive"}
                       </td>

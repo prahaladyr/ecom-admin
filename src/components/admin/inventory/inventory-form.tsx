@@ -6,26 +6,47 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export default function InventoryForm({ productId }: { productId: string }) {
+type Props = {
+  variantId: string;
+  warehouseId: string;
+};
+
+type InventoryRecord = {
+  id: string;
+  quantityAvailable: number;
+  quantityReserved: number;
+  reorderLevel?: number | null;
+};
+
+export default function InventoryForm({ variantId, warehouseId }: Props) {
   const router = useRouter();
-  const [quantity, setQuantity] = useState("0");
+  const [quantityAvailable, setQuantityAvailable] = useState("0");
+  const [quantityReserved, setQuantityReserved] = useState("0");
+  const [reorderLevel, setReorderLevel] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [current, setCurrent] = useState<number | null>(null);
+  const [current, setCurrent] = useState<InventoryRecord | null>(null);
+  const [inventoryId, setInventoryId] = useState<string | null>(null);
 
   async function load() {
     setError(null);
-    const res = await fetch(`/api/admin/inventory/${productId}`);
-    const json = (await res.json().catch(() => null)) as {
-      quantity?: number;
-      message?: string;
-    } | null;
-    if (!res.ok || typeof json?.quantity !== "number") {
-      setError(json?.message || "Failed to load inventory");
+    const res = await fetch(
+      `/api/admin/inventory?variantId=${variantId}&warehouseId=${warehouseId}`,
+    );
+    const json = (await res.json().catch(() => null)) as
+      | InventoryRecord[]
+      | { message?: string }
+      | null;
+    if (!res.ok || !Array.isArray(json)) {
+      setError((json as { message?: string } | null)?.message || "Failed to load inventory");
       return;
     }
-    setCurrent(json.quantity);
-    setQuantity(String(json.quantity));
+    const record = json[0] ?? null;
+    setCurrent(record);
+    setInventoryId(record?.id ?? null);
+    setQuantityAvailable(String(record?.quantityAvailable ?? 0));
+    setQuantityReserved(String(record?.quantityReserved ?? 0));
+    setReorderLevel(record?.reorderLevel != null ? String(record.reorderLevel) : "");
   }
 
   async function onSubmit(event: React.FormEvent) {
@@ -33,11 +54,22 @@ export default function InventoryForm({ productId }: { productId: string }) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/inventory/${productId}`, {
-        method: "PUT",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ quantity: Number(quantity) }),
-      });
+      const payload = {
+        variantId,
+        warehouseId,
+        quantityAvailable: Number(quantityAvailable),
+        quantityReserved: Number(quantityReserved),
+        reorderLevel: reorderLevel ? Number(reorderLevel) : undefined,
+      };
+
+      const res = await fetch(
+        inventoryId ? `/api/admin/inventory/${inventoryId}` : "/api/admin/inventory",
+        {
+          method: inventoryId ? "PUT" : "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const json = (await res.json().catch(() => null)) as { message?: string } | null;
       if (!res.ok) {
         setError(json?.message || "Failed to update inventory");
@@ -52,8 +84,8 @@ export default function InventoryForm({ productId }: { productId: string }) {
   return (
     <form onSubmit={onSubmit} className="grid gap-3">
       <div className="flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">Current quantity</span>
-        <span>{current ?? "Not loaded"}</span>
+        <span className="text-muted-foreground">Current available</span>
+        <span>{current?.quantityAvailable ?? "Not loaded"}</span>
       </div>
 
       <Button type="button" variant="outline" size="sm" onClick={load}>
@@ -61,14 +93,37 @@ export default function InventoryForm({ productId }: { productId: string }) {
       </Button>
 
       <div className="grid gap-2">
-        <Label htmlFor="quantity">Quantity</Label>
+        <Label htmlFor="quantityAvailable">Available quantity</Label>
         <Input
-          id="quantity"
+          id="quantityAvailable"
           type="number"
           min={0}
-          value={quantity}
-          onChange={(event) => setQuantity(event.target.value)}
+          value={quantityAvailable}
+          onChange={(event) => setQuantityAvailable(event.target.value)}
           required
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="quantityReserved">Reserved quantity</Label>
+        <Input
+          id="quantityReserved"
+          type="number"
+          min={0}
+          value={quantityReserved}
+          onChange={(event) => setQuantityReserved(event.target.value)}
+          required
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="reorderLevel">Reorder level</Label>
+        <Input
+          id="reorderLevel"
+          type="number"
+          min={0}
+          value={reorderLevel}
+          onChange={(event) => setReorderLevel(event.target.value)}
         />
       </div>
 

@@ -14,6 +14,8 @@ type Coupon = {
   type: "PERCENT" | "AMOUNT";
   value: number;
   isActive: boolean;
+  maxRedemptions?: number | null;
+  perUserLimit?: number | null;
   startsAt?: string | null;
   endsAt?: string | null;
 };
@@ -27,6 +29,8 @@ export default function EditCouponForm({ coupon }: { coupon: Coupon }) {
     type: coupon.type,
     value: String(coupon.value),
     isActive: coupon.isActive,
+    maxRedemptions: coupon.maxRedemptions != null ? String(coupon.maxRedemptions) : "",
+    perUserLimit: coupon.perUserLimit != null ? String(coupon.perUserLimit) : "",
     startsAt: coupon.startsAt ? coupon.startsAt.slice(0, 16) : "",
     endsAt: coupon.endsAt ? coupon.endsAt.slice(0, 16) : "",
   });
@@ -41,6 +45,8 @@ export default function EditCouponForm({ coupon }: { coupon: Coupon }) {
       type: form.type,
       value: Number(form.value),
       isActive: form.isActive,
+      maxRedemptions: form.maxRedemptions ? Number(form.maxRedemptions) : undefined,
+      perUserLimit: form.perUserLimit ? Number(form.perUserLimit) : undefined,
       startsAt: form.startsAt || undefined,
       endsAt: form.endsAt || undefined,
     };
@@ -130,6 +136,28 @@ export default function EditCouponForm({ coupon }: { coupon: Coupon }) {
         />
         Active
       </label>
+
+      <div className="grid gap-2">
+        <Label htmlFor="maxRedemptions">Max redemptions</Label>
+        <Input
+          id="maxRedemptions"
+          type="number"
+          min={0}
+          value={form.maxRedemptions}
+          onChange={(event) => setForm((prev) => ({ ...prev, maxRedemptions: event.target.value }))}
+        />
+      </div>
+
+      <div className="grid gap-2">
+        <Label htmlFor="perUserLimit">Per-user limit</Label>
+        <Input
+          id="perUserLimit"
+          type="number"
+          min={0}
+          value={form.perUserLimit}
+          onChange={(event) => setForm((prev) => ({ ...prev, perUserLimit: event.target.value }))}
+        />
+      </div>
 
       <div className="grid gap-2">
         <Label htmlFor="startsAt">Starts at (ISO)</Label>

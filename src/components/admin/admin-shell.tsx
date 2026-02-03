@@ -25,6 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/admin/products", label: "Products" },
   { href: "/admin/categories", label: "Categories" },
   { href: "/admin/inventory", label: "Inventory" },
+  { href: "/admin/warehouses", label: "Warehouses" },
   { href: "/admin/orders", label: "Orders" },
   { href: "/admin/coupons", label: "Coupons" },
   { href: "/admin/cart", label: "Cart" },

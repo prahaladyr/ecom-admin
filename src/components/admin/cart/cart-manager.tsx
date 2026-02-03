@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type CartItem = {
-  productId: string;
+  variantId: string;
   quantity: number;
 };
 
@@ -20,7 +20,7 @@ export default function CartManager() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [newItem, setNewItem] = useState({ productId: "", quantity: "1" });
+  const [newItem, setNewItem] = useState({ variantId: "", quantity: "1" });
 
   async function loadCart() {
     setError(null);
@@ -44,7 +44,7 @@ export default function CartManager() {
 
   async function addItem(event: React.FormEvent) {
     event.preventDefault();
-    if (!newItem.productId) return;
+    if (!newItem.variantId) return;
     setError(null);
     setLoading(true);
     try {
@@ -55,7 +55,7 @@ export default function CartManager() {
           ...(cartId ? { "x-cart-id": cartId } : {}),
         },
         body: JSON.stringify({
-          productId: newItem.productId,
+          variantId: newItem.variantId,
           quantity: Number(newItem.quantity),
         }),
       });
@@ -67,17 +67,17 @@ export default function CartManager() {
       const headerId = res.headers.get("x-cart-id");
       if (headerId) setCartId(headerId);
       setCart(json as Cart);
-      setNewItem({ productId: "", quantity: "1" });
+      setNewItem({ variantId: "", quantity: "1" });
     } finally {
       setLoading(false);
     }
   }
 
-  async function updateItem(productId: string, quantity: number) {
+  async function updateItem(variantId: string, quantity: number) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/cart/items/${productId}`, {
+      const res = await fetch(`/api/admin/cart/items/${variantId}`, {
         method: "PATCH",
         headers: {
           "content-type": "application/json",
@@ -98,11 +98,11 @@ export default function CartManager() {
     }
   }
 
-  async function removeItem(productId: string) {
+  async function removeItem(variantId: string) {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/admin/cart/items/${productId}`, {
+      const res = await fetch(`/api/admin/cart/items/${variantId}`, {
         method: "DELETE",
         headers: cartId ? { "x-cart-id": cartId } : undefined,
       });
@@ -164,11 +164,11 @@ export default function CartManager() {
 
       <form onSubmit={addItem} className="grid gap-3 sm:grid-cols-[2fr_1fr_auto] sm:items-end">
         <div className="grid gap-2">
-          <Label htmlFor="productId">Product ID</Label>
+          <Label htmlFor="variantId">Variant ID</Label>
           <Input
-            id="productId"
-            value={newItem.productId}
-            onChange={(event) => setNewItem((prev) => ({ ...prev, productId: event.target.value }))}
+            id="variantId"
+            value={newItem.variantId}
+            onChange={(event) => setNewItem((prev) => ({ ...prev, variantId: event.target.value }))}
             placeholder="UUID"
             required
           />
@@ -205,22 +205,22 @@ export default function CartManager() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b text-left">
-                  <th className="py-2">Product ID</th>
+                  <th className="py-2">Variant ID</th>
                   <th className="py-2">Quantity</th>
                   <th className="py-2">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {cart.items.map((item) => (
-                  <tr key={item.productId} className="border-b">
-                    <td className="py-2 break-all">{item.productId}</td>
+                  <tr key={item.variantId} className="border-b">
+                    <td className="py-2 break-all">{item.variantId}</td>
                     <td className="py-2">
                       <Input
                         type="number"
                         min={0}
                         defaultValue={item.quantity}
                         onBlur={(event) =>
-                          updateItem(item.productId, Number(event.target.value || item.quantity))
+                          updateItem(item.variantId, Number(event.target.value || item.quantity))
                         }
                       />
                     </td>
@@ -229,7 +229,7 @@ export default function CartManager() {
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => removeItem(item.productId)}
+                        onClick={() => removeItem(item.variantId)}
                       >
                         Remove
                       </Button>
